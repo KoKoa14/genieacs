@@ -199,10 +199,10 @@ async function writeResponse(
   httpResponse.end(data);
 
   if (connection.destroyed) {
-    logger.accessError({
-      sessionContext: sessionContext,
-      message: "Connection dropped",
-    });
+    // logger.accessError({
+    //   sessionContext: sessionContext,
+    //   message: "Connection dropped",
+    // });
     await endSession(sessionContext);
   } else if (close) {
     session.clearProvisions(sessionContext);
@@ -273,13 +273,13 @@ function recordFault(
     if (!sessionContext.faultsTouched) sessionContext.faultsTouched = {};
     sessionContext.faultsTouched[channel] = true;
 
-    logger.accessWarn({
-      sessionContext: sessionContext,
-      message: "Channel has faulted",
-      fault: fault,
-      channel: channel,
-      retries: sessionContext.retries[channel],
-    });
+    // logger.accessWarn({
+    //   sessionContext: sessionContext,
+    //   message: "Channel has faulted",
+    //   fault: fault,
+    //   channel: channel,
+    //   retries: sessionContext.retries[channel],
+    // });
   }
 
   for (let i = 0; i < provisions.length; ++i) {
@@ -338,13 +338,13 @@ async function transferComplete(sessionContext, rpc): Promise<void> {
     rpc.cpeRequest
   );
 
-  if (!operation) {
-    logger.accessWarn({
-      sessionContext: sessionContext,
-      message: "Unrecognized command key",
-      rpc: rpc,
-    });
-  }
+  // if (!operation) {
+  //   logger.accessWarn({
+  //     sessionContext: sessionContext,
+  //     message: "Unrecognized command key",
+  //     rpc: rpc,
+  //   });
+  // }
 
   if (fault) {
     Object.assign(sessionContext.retries, operation.retries);
@@ -652,11 +652,11 @@ async function nextRpc(sessionContext: SessionContext): Promise<void> {
   sessionContext.tasks = sessionContext.tasks.filter((task) => {
     if (!(task.expiry <= sessionContext.timestamp)) return true;
 
-    logger.accessInfo({
-      sessionContext: sessionContext,
-      message: "Task expired",
-      task: task,
-    });
+    // logger.accessInfo({
+    //   sessionContext: sessionContext,
+    //   message: "Task expired",
+    //   task: task,
+    // });
 
     if (!sessionContext.doneTasks) sessionContext.doneTasks = [];
     sessionContext.doneTasks.push(task._id);
@@ -741,11 +741,11 @@ async function nextRpc(sessionContext: SessionContext): Promise<void> {
       sessionContext.doneTasks.push(task._id);
       sessionContext.tasks = sessionContext.tasks.filter((t) => t !== task);
 
-      logger.accessWarn({
-        sessionContext: sessionContext,
-        message: "Invalid task",
-        taskId: task._id,
-      });
+      // logger.accessWarn({
+      //   sessionContext: sessionContext,
+      //   message: "Invalid task",
+      //   taskId: task._id,
+      // });
   }
 
   return nextRpc(sessionContext);
@@ -831,12 +831,12 @@ async function endSession(sessionContext: SessionContext): Promise<void> {
     `cwmp_session_${sessionContext.deviceId}`,
     sessionContext.sessionId
   );
-  if (sessionContext.new) {
-    logger.accessInfo({
-      sessionContext: sessionContext,
-      message: "New device registered",
-    });
-  }
+  // if (sessionContext.new) {
+  //   logger.accessInfo({
+  //     sessionContext: sessionContext,
+  //     message: "New device registered",
+  //   });
+  // }
 }
 
 async function sendAcsRequest(
@@ -875,11 +875,11 @@ async function sendAcsRequest(
     cwmpVersion: sessionContext.cwmpVersion,
   };
 
-  logger.accessInfo({
-    sessionContext: sessionContext,
-    message: "ACS request",
-    rpc: rpc,
-  });
+  // logger.accessInfo({
+  //   sessionContext: sessionContext,
+  //   message: "ACS request",
+  //   rpc: rpc,
+  // });
 
   const res = soap.response(rpc);
   return writeResponse(sessionContext, res);
@@ -892,10 +892,10 @@ export function onConnection(socket: Socket): void {
     if (!sessionContext) return;
     currentSessions.delete(socket);
     if (sessionContext.authState !== 2) {
-      logger.accessError({
-        message: "Authentication failure",
-        sessionContext: sessionContext,
-      });
+      // logger.accessError({
+      //   message: "Authentication failure",
+      //   sessionContext: sessionContext,
+      // });
       return;
     }
 
@@ -912,7 +912,7 @@ export function onConnection(socket: Socket): void {
       sessionContext.lastActivity + sessionContext.timeout * 1000 - now;
 
     if (timeout <= 0) {
-      logger.accessError(timeoutMsg);
+      // logger.accessError(timeoutMsg);
       // TODO it's possible that lock would have already been expired
       await endSession(sessionContext);
       return;
@@ -925,7 +925,7 @@ export function onConnection(socket: Socket): void {
       if (!sessionContextString) return;
       const _sessionContext = await session.deserialize(sessionContextString);
       if (_sessionContext.lastActivity === lastActivity) {
-        logger.accessError(timeoutMsg);
+        // logger.accessError(timeoutMsg);
         await endSession(sessionContext);
       }
     }, timeout + 1000).unref();
@@ -968,15 +968,15 @@ export function onClientError(err: Error, socket: Socket): void {
 }
 
 setInterval(() => {
-  if (stats.droppedRequests) {
-    logger.warn({
-      message: "Worker overloaded",
-      droppedRequests: stats.droppedRequests,
-      totalRequests: stats.totalRequests,
-      initiatedSessions: stats.initiatedSessions,
-      pid: process.pid,
-    });
-  }
+  // if (stats.droppedRequests) {
+  //   logger.warn({
+  //     message: "Worker overloaded",
+  //     droppedRequests: stats.droppedRequests,
+  //     totalRequests: stats.totalRequests,
+  //     initiatedSessions: stats.initiatedSessions,
+  //     pid: process.pid,
+  //   });
+  // }
 
   stats.totalRequests = 0;
   stats.droppedRequests = 0;
@@ -1044,10 +1044,10 @@ async function cacheDueTasksAndFaultsAndOperations(
 }
 
 async function reportBadState(sessionContext: SessionContext): Promise<void> {
-  logger.accessError({
-    message: "Bad session state",
-    sessionContext: sessionContext,
-  });
+  // logger.accessError({
+  //   message: "Bad session state",
+  //   sessionContext: sessionContext,
+  // });
   const httpResponse = sessionContext.httpResponse;
   const body = "Bad session state";
   httpResponse.setHeader("Content-Length", Buffer.byteLength(body));
@@ -1065,10 +1065,10 @@ async function responseUnauthorized(
   const resHeaders = {};
   if (close) {
     // Invalid credentials
-    logger.accessError({
-      message: "Authentication failure",
-      sessionContext: sessionContext,
-    });
+    // logger.accessError({
+    //   message: "Authentication failure",
+    //   sessionContext: sessionContext,
+    // });
 
     resHeaders["Connection"] = "close";
   } else {
@@ -1103,7 +1103,7 @@ async function processRequest(
 ): Promise<void> {
   for (const w of parseWarnings) {
     w.sessionContext = sessionContext;
-    logger.accessWarn(w);
+    // logger.accessWarn(w);
   }
 
   if (sessionContext.state === 0) {
@@ -1159,10 +1159,10 @@ async function processRequest(
     );
 
     if (!lockToken) {
-      logger.accessError({
-        message: "CPE already in session",
-        sessionContext: sessionContext,
-      });
+      // logger.accessError({
+      //   message: "CPE already in session",
+      //   sessionContext: sessionContext,
+      // });
 
       const _body = "CPE already in session";
       sessionContext.httpResponse.setHeader(
@@ -1184,11 +1184,11 @@ async function processRequest(
     sessionContext.state = 1;
     sessionContext.authState = 2;
 
-    logger.accessInfo({
-      sessionContext: sessionContext,
-      message: "Inform",
-      rpc: rpc,
-    });
+    // logger.accessInfo({
+    //   sessionContext: sessionContext,
+    //   message: "Inform",
+    //   rpc: rpc,
+    // });
 
     return writeResponse(sessionContext, res);
   }
@@ -1220,20 +1220,20 @@ async function processRequest(
     if (rpc.cpeRequest.name === "TransferComplete") {
       if (sessionContext.state !== 1) return reportBadState(sessionContext);
 
-      logger.accessInfo({
-        sessionContext: sessionContext,
-        message: "CPE request",
-        rpc: rpc,
-      });
+      // logger.accessInfo({
+      //   sessionContext: sessionContext,
+      //   message: "CPE request",
+      //   rpc: rpc,
+      // });
       return transferComplete(sessionContext, rpc);
     } else if (rpc.cpeRequest.name === "GetRPCMethods") {
       if (sessionContext.state !== 1) return reportBadState(sessionContext);
 
-      logger.accessInfo({
-        sessionContext: sessionContext,
-        message: "CPE request",
-        rpc: rpc,
-      });
+      // logger.accessInfo({
+      //   sessionContext: sessionContext,
+      //   message: "CPE request",
+      //   rpc: rpc,
+      // });
       const res = soap.response({
         id: rpc.id,
         acsResponse: {
@@ -1265,11 +1265,11 @@ async function processRequest(
   } else if (rpc.cpeFault) {
     if (sessionContext.state !== 2) return reportBadState(sessionContext);
 
-    logger.accessWarn({
-      sessionContext: sessionContext,
-      message: "CPE fault",
-      rpc: rpc,
-    });
+    // logger.accessWarn({
+    //   sessionContext: sessionContext,
+    //   message: "CPE fault",
+    //   rpc: rpc,
+    // });
 
     const fault = await session.rpcFault(sessionContext, rpc.id, rpc.cpeFault);
     if (fault) {
@@ -1279,11 +1279,11 @@ async function processRequest(
     return nextRpc(sessionContext);
   } else if (rpc.unknownMethod) {
     if (sessionContext.state === 1) {
-      logger.accessWarn({
-        sessionContext: sessionContext,
-        message: "Method not supported",
-        method: rpc.unknownMethod,
-      });
+      // logger.accessWarn({
+      //   sessionContext: sessionContext,
+      //   message: "Method not supported",
+      //   method: rpc.unknownMethod,
+      // });
 
       const f: CpeFault = {
         faultCode: "Server",
@@ -1489,10 +1489,10 @@ async function listenerAsync(
       (sessionContext.sessionId !== sessionId && sessionContext.state) ||
       sessionContext.lastActivity + sessionContext.timeout * 1000 < Date.now()
     ) {
-      logger.accessError({
-        message: "Invalid session",
-        sessionContext: sessionContext,
-      });
+      // logger.accessError({
+      //   message: "Invalid session",
+      //   sessionContext: sessionContext,
+      // });
 
       return clientError(
         httpRequest,
@@ -1532,14 +1532,14 @@ async function listenerAsync(
     }
 
     const msg = `Unknown encoding '${charset}'`;
-    logger.accessError({
-      message: "XML parse error",
-      parseError: msg,
-      sessionContext: sessionContext || {
-        httpRequest: httpRequest,
-        httpResponse: httpResponse,
-      },
-    });
+    // logger.accessError({
+    //   message: "XML parse error",
+    //   parseError: msg,
+    //   sessionContext: sessionContext || {
+    //     httpRequest: httpRequest,
+    //     httpResponse: httpResponse,
+    //   },
+    // });
     return clientError(
       httpRequest,
       httpResponse,
@@ -1564,14 +1564,14 @@ async function listenerAsync(
       }
     }
 
-    logger.accessError({
-      message: "XML parse error",
-      parseError: err.message,
-      sessionContext: sessionContext || {
-        httpRequest: httpRequest,
-        httpResponse: httpResponse,
-      },
-    });
+    // logger.accessError({
+    //   message: "XML parse error",
+    //   parseError: err.message,
+    //   sessionContext: sessionContext || {
+    //     httpRequest: httpRequest,
+    //     httpResponse: httpResponse,
+    //   },
+    // });
 
     return clientError(
       httpRequest,
@@ -1598,13 +1598,13 @@ async function listenerAsync(
     return processRequest(sessionContext, rpc, parseWarnings, bodyStr);
 
   if (rpc.cpeRequest?.name !== "Inform") {
-    logger.accessError({
-      message: "Invalid session",
-      sessionContext: {
-        httpRequest: httpRequest,
-        httpResponse: httpResponse,
-      },
-    });
+    // logger.accessError({
+    //   message: "Invalid session",
+    //   sessionContext: {
+    //     httpRequest: httpRequest,
+    //     httpResponse: httpResponse,
+    //   },
+    // });
 
     return clientError(
       httpRequest,
