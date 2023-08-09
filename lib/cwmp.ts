@@ -755,12 +755,12 @@ async function endSession(sessionContext: SessionContext): Promise<void> {
   let saveCache = sessionContext.cacheUntil != null;
 
   if (sessionContext.provisions.length) {
-    const fault = {
-      code: "session_terminated",
-      message: "The TR-069 session was unsuccessfully terminated",
-      timestamp: sessionContext.timestamp,
-    };
-    recordFault(sessionContext, fault);
+    // const fault = {
+    //   code: "session_terminated",
+    //   message: "The TR-069 session was unsuccessfully terminated",
+    //   timestamp: sessionContext.timestamp,
+    // };
+    // recordFault(sessionContext, fault);
     // No need to save retryNow
     for (const f of Object.values(sessionContext.faults)) delete f.retryNow;
   }
